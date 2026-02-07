@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pedido</title>
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background: #f2f2f2;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+margin:0;
+}
+
+.container{
+background:white;
+padding:60px;
+border-radius:15px;
+box-shadow:0 5px 20px rgba(0,0,0,0.2);
+width:90%;
+max-width:420px;
+}
+
+h2{
+text-align:center;
+}
+
+input, select{
+width:100%;
+padding:14px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ccc;
+font-size:16px;
+}
+
+.product-row{
+margin-top:10px;
+padding:30px;
+border:1px dashed #ccc;
+border-radius:10px;
+}
+
+.subtotal{
+font-size:14px;
+margin-top:5px;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:15px;
+background:#25D366;
+color:white;
+border:none;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1ebe5d;
+}
+
+.add-product{
+background:#007bff;
+}
+
+.success{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#25D366;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+color:white;
+font-size:22px;
+opacity:0;
+pointer-events:none;
+transition:0.5s;
+}
+
+.success.show{
+opacity:1;
+pointer-events:all;
+}
+
+.check{
+font-size:80px;
+animation:pop 0.5s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(0);}
+100%{transform:scale(1);}
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Formulario de Pedido</h2>
+
+<form id="pedidoForm">
+
+<input type="text" id="pedidoNumero" placeholder="Número de pedido" required>
+
+<input type="text" id="nombre" placeholder="Nombre del cliente" required>
+
+<input type="text" id="ubicacion" placeholder="Ubicación" required>
+
+<select id="tipoPago" required>
+<option value="">Tipo de pago</option>
+<option>Contado</option>
+<option>Crédito</option>
+</select>
+
+<h3>Productos</h3>
+
+<div id="productos"></div>
+
+<button type="button" class="add-product" onclick="agregarProducto()">
+➕ Añadir Producto
+</button>
+
+<input type="number" step="0.01" id="envio" placeholder="Costo de envío" oninput="calcularTotal()">
+
+<input type="number" step="0.01" id="total" placeholder="Total" readonly>
+
+<input type="date" id="fecha" required>
+<input type="time" id="hora" required>
+<input type="tel" id="telefono" placeholder="Número de teléfono" required>
+
+<button type="submit">Pagar / Enviar Pedido</button>
+
+</form>
+
+</div>
+
+<div class="success" id="successScreen">
+<div class="check">✔</div>
+<p>Su pedido ha sido enviado</p>
+</div>
+
+<script>
+
+function agregarProducto(){
+
+let contenedor = document.getElementById("productos");
+
+let div = document.createElement("div");
+div.classList.add("product-row");
+
+div.innerHTML = `
+<input type="text" placeholder="Nombre del producto" class="producto-nombre" required>
+
+<input type="number" placeholder="Cantidad" class="producto-cantidad" min="1" value="1" oninput="calcularTotal()" required>
+
+<input type="number" step="0.01" placeholder="Precio unitario" class="producto-precio" oninput="calcularTotal()" required>
+
+<div class="subtotal">Subtotal: $0.00</div>
+`;
+
+contenedor.appendChild(div);
+
+}
+
+function calcularTotal(){
+
+let total = 0;
+let envio = parseFloat(document.getElementById("envio").value) || 0;
+
+document.querySelectorAll(".product-row").forEach(row=>{
+
+let cantidad = parseFloat(row.querySelector(".producto-cantidad").value) || 0;
+let precio = parseFloat(row.querySelector(".producto-precio").value) || 0;
+
+let subtotal = cantidad * precio;
+
+row.querySelector(".subtotal").innerText = `Subtotal: $${subtotal.toFixed(2)}`;
+
+total += subtotal;
+
+});
+
+total += envio;
+
+document.getElementById("total").value = total.toFixed(2);
+
+}
+
+document.getElementById("pedidoForm").addEventListener("submit", function(e){
+
+e.preventDefault();
+
+let pedidoNumero = document.getElementById("pedidoNumero").value;
+let nombre = document.getElementById("nombre").value;
+let ubicacion = document.getElementById("ubicacion").value;
+let tipoPago = document.getElementById("tipoPago").value;
+let fecha = document.getElementById("fecha").value;
+let hora = document.getElementById("hora").value;
+let telefono = document.getElementById("telefono").value;
+let total = document.getElementById("total").value;
+let envio = document.getElementById("envio").value || 0;
+
+let productosTexto = "";
+
+document.querySelectorAll(".product-row").forEach(row=>{
+
+let nombreProd = row.querySelector(".producto-nombre").value;
+let cantidad = row.querySelector(".producto-cantidad").value;
+let precio = row.querySelector(".producto-precio").value;
+
+productosTexto += `• ${nombreProd} (x${cantidad}) - $${precio}\n`;
+
+});
+
+let mensaje = `📦 NUEVO PEDIDO
+
+🧾 Pedido #: ${pedidoNumero}
+
+👤 Cliente: ${nombre}
+📍 Ubicación: ${ubicacion}
+💳 Pago: ${tipoPago}
+
+🛒 Productos:
+${productosTexto}
+
+🚚 Envío: $${envio}
+💰 Total: $${total}
+
+📅 Fecha: ${fecha}
+⏰ Hora: ${hora}
+📞 Teléfono: ${telefono}
+`;
+
+let numero = "50762980868";
+
+let url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+document.getElementById("successScreen").classList.add("show");
+
+setTimeout(()=>{
+window.open(url, "_blank");
+},2000);
+
+});
+
+/* Crear primer producto automático */
+document.addEventListener("DOMContentLoaded", agregarProducto);
+
+</script>
+
+</body>
+</html>
