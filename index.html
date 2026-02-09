@@ -40,7 +40,7 @@ font-size:16px;
 
 .product-row{
 margin-top:10px;
-padding:30px;
+padding:20px;
 border:1px dashed #ccc;
 border-radius:10px;
 }
@@ -116,9 +116,7 @@ animation:pop 0.5s ease;
 <form id="pedidoForm">
 
 <input type="text" id="pedidoNumero" placeholder="Número de pedido" required>
-
 <input type="text" id="nombre" placeholder="Nombre del cliente" required>
-
 <input type="text" id="ubicacion" placeholder="Ubicación" required>
 
 <select id="tipoPago" required>
@@ -128,7 +126,6 @@ animation:pop 0.5s ease;
 </select>
 
 <h3>Productos</h3>
-
 <div id="productos"></div>
 
 <button type="button" class="add-product" onclick="agregarProducto()">
@@ -136,7 +133,6 @@ animation:pop 0.5s ease;
 </button>
 
 <input type="number" step="0.01" id="envio" placeholder="Costo de envío" oninput="calcularTotal()">
-
 <input type="number" step="0.01" id="total" placeholder="Total" readonly>
 
 <input type="date" id="fecha" required>
@@ -156,6 +152,7 @@ animation:pop 0.5s ease;
 
 <script>
 
+// Agregar producto
 function agregarProducto(){
 
 let contenedor = document.getElementById("productos");
@@ -165,18 +162,15 @@ div.classList.add("product-row");
 
 div.innerHTML = `
 <input type="text" placeholder="Nombre del producto" class="producto-nombre" required>
-
 <input type="number" placeholder="Cantidad" class="producto-cantidad" min="1" value="1" oninput="calcularTotal()" required>
-
 <input type="number" step="0.01" placeholder="Precio unitario" class="producto-precio" oninput="calcularTotal()" required>
-
 <div class="subtotal">Subtotal: $0.00</div>
 `;
 
 contenedor.appendChild(div);
-
 }
 
+// Calcular total
 function calcularTotal(){
 
 let total = 0;
@@ -196,11 +190,27 @@ total += subtotal;
 });
 
 total += envio;
-
 document.getElementById("total").value = total.toFixed(2);
-
 }
 
+// Imprimir ticket
+function imprimirTicket(mensaje){
+
+let ventana = window.open('', 'PRINT', 'height=600,width=400');
+
+ventana.document.write(`
+<pre style="font-family: monospace;">
+${mensaje}
+</pre>
+`);
+
+ventana.document.close();
+ventana.focus();
+ventana.print();
+ventana.close();
+}
+
+// Enviar formulario
 document.getElementById("pedidoForm").addEventListener("submit", function(e){
 
 e.preventDefault();
@@ -227,15 +237,51 @@ productosTexto += `• ${nombreProd} (x${cantidad}) - $${precio}\n`;
 
 });
 
-let mensaje = `📦 NUEVO PEDIDO
 
-🧾 Pedido #: ${pedidoNumero}
+// MENSAJE FACTURA (IMPRESIÓN)
+let mensajeFactura = `
+****************************************
+               ROBERT SHOP
+            FACTURA NO FISCAL
+****************************************     
+
+◉ NUEVO PEDIDO
+
+◉ Pedido #: ${pedidoNumero}
+
+◉ Cliente: ${nombre}
+◉ Ubicación: ${ubicacion}
+◉ Pago: ${tipoPago}
+
+◉ Productos:
+${productosTexto}
+
+◉ Envío: $${envio}
+◉ Total: $${total}
+
+◉ Fecha: ${fecha}
+◉ Hora: ${hora}
+◉ Teléfono: ${telefono}
+****************************************
+
+Búscanos en el directorio de Yappy,
+como Robert Shop.
+
+GRACIAS POR SU COMPRA
+`;
+
+
+// MENSAJE WHATSAPP
+let mensajeWhatsApp = `
+🛒 NUEVO PEDIDO
+
+📦 Pedido #: ${pedidoNumero}
 
 👤 Cliente: ${nombre}
 📍 Ubicación: ${ubicacion}
 💳 Pago: ${tipoPago}
 
-🛒 Productos:
+🧾 Productos:
 ${productosTexto}
 
 🚚 Envío: $${envio}
@@ -247,18 +293,21 @@ ${productosTexto}
 `;
 
 let numero = "50762980868";
-
-let url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+let url = `https://wa.me/${numero}?text=${encodeURIComponent(mensajeWhatsApp)}`;
 
 document.getElementById("successScreen").classList.add("show");
 
+// Imprimir ticket
+imprimirTicket(mensajeFactura);
+
+// Abrir WhatsApp
 setTimeout(()=>{
 window.open(url, "_blank");
 },2000);
 
 });
 
-/* Crear primer producto automático */
+// Crear primer producto automático
 document.addEventListener("DOMContentLoaded", agregarProducto);
 
 </script>
