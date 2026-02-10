@@ -5,7 +5,6 @@
 <title>Pedido</title>
 
 <style>
-
 body{
 font-family: Arial, sans-serif;
 background: #f2f2f2;
@@ -25,9 +24,7 @@ width:90%;
 max-width:420px;
 }
 
-h2{
-text-align:center;
-}
+h2{text-align:center;}
 
 input, select{
 width:100%;
@@ -62,13 +59,8 @@ font-size:18px;
 cursor:pointer;
 }
 
-button:hover{
-background:#1ebe5d;
-}
-
-.add-product{
-background:#007bff;
-}
+button:hover{background:#1ebe5d;}
+.add-product{background:#007bff;}
 
 .success{
 position:fixed;
@@ -95,16 +87,8 @@ pointer-events:all;
 
 .check{
 font-size:80px;
-animation:pop 0.5s ease;
 }
-
-@keyframes pop{
-0%{transform:scale(0);}
-100%{transform:scale(1);}
-}
-
 </style>
-
 </head>
 
 <body>
@@ -125,6 +109,16 @@ animation:pop 0.5s ease;
 <option>Crédito</option>
 </select>
 
+<select id="repartidor" required>
+<option value="">Seleccionar repartidor</option>
+<option value="maiquel">Maiquel</option>
+<option value="roberto">Roberto</option>
+<option value="ricaedo">Ricaedo</option>
+<option value="mole">Mole</option>
+<option value="rafael">Rafael</option>
+<option value="dimitri">Dimitri</option>
+</select>
+
 <h3>Productos</h3>
 <div id="productos"></div>
 
@@ -142,7 +136,6 @@ animation:pop 0.5s ease;
 <button type="submit">Pagar / Enviar Pedido</button>
 
 </form>
-
 </div>
 
 <div class="success" id="successScreen">
@@ -152,9 +145,16 @@ animation:pop 0.5s ease;
 
 <script>
 
-// Agregar producto
-function agregarProducto(){
+const repartidores = {
+maiquel: {numero:"50764058540", nombre:"Maiquel"},
+roberto: {numero:"50762792239", nombre:"Roberto"},
+ricardo: {numero:"50764285441", nombre:"Ricaedo"},
+mole: {numero:"50769130640", nombre:"Mole"},
+rafael: {numero:"50762980868", nombre:"Rafael"},
+dimitri: {numero:"50763301770", nombre:"Dimitri"}
+};
 
+function agregarProducto(){
 let contenedor = document.getElementById("productos");
 
 let div = document.createElement("div");
@@ -170,7 +170,6 @@ div.innerHTML = `
 contenedor.appendChild(div);
 }
 
-// Calcular total
 function calcularTotal(){
 
 let total = 0;
@@ -193,27 +192,26 @@ total += envio;
 document.getElementById("total").value = total.toFixed(2);
 }
 
-// Imprimir ticket
 function imprimirTicket(mensaje){
 
 let ventana = window.open('', 'PRINT', 'height=600,width=400');
 
-ventana.document.write(`
-<pre style="font-family: monospace;">
-${mensaje}
-</pre>
-`);
+ventana.document.write(`<pre style="font-family: monospace;">${mensaje}</pre>`);
 
 ventana.document.close();
-ventana.focus();
 ventana.print();
 ventana.close();
 }
 
-// Enviar formulario
 document.getElementById("pedidoForm").addEventListener("submit", function(e){
 
 e.preventDefault();
+
+let repartidorKey = document.getElementById("repartidor").value;
+let repartidorData = repartidores[repartidorKey];
+
+let numeroRepartidor = repartidorData.numero;
+let nombreRepartidor = repartidorData.nombre;
 
 let pedidoNumero = document.getElementById("pedidoNumero").value;
 let nombre = document.getElementById("nombre").value;
@@ -228,89 +226,88 @@ let envio = document.getElementById("envio").value || 0;
 let productosTexto = "";
 
 document.querySelectorAll(".product-row").forEach(row=>{
-
 let nombreProd = row.querySelector(".producto-nombre").value;
 let cantidad = row.querySelector(".producto-cantidad").value;
 let precio = row.querySelector(".producto-precio").value;
 
 productosTexto += `• ${nombreProd} (x${cantidad}) - $${precio}\n`;
-
 });
 
-
-// MENSAJE FACTURA (IMPRESIÓN)
 let mensajeFactura = `
 ****************************************
                ROBERT SHOP
             FACTURA NO FISCAL
 ****************************************     
 
-◉ NUEVO PEDIDO
-
 ◉ Pedido #: ${pedidoNumero}
+
+◉ Fecha: ${fecha}
+◉ Hora: ${hora}
 
 ◉ Cliente: ${nombre}
 ◉ Ubicación: ${ubicacion}
+◉ Teléfono: ${telefono}
 ◉ Pago: ${tipoPago}
+◉ Repartidor: ${nombreRepartidor}
 
 ◉ Productos:
 ${productosTexto}
 
 ◉ Envío: $${envio}
 ◉ Total: $${total}
-
-◉ Fecha: ${fecha}
-◉ Hora: ${hora}
-◉ Teléfono: ${telefono}
 ****************************************
-
-Búscanos en el directorio de Yappy,
-como Robert Shop.
-
 GRACIAS POR SU COMPRA
+
+Realizar tu pedidos al: 6279-2239
+
+Buscarnos en el directorio de 
+Yappy como: ROBERT SHOP
 `;
 
+let mensajeRepartidor = `
+◉ NUEVO PEDIDO ◉ 
 
-// MENSAJE WHATSAPP
-let mensajeWhatsApp = `
-🛒 NUEVO PEDIDO
+◉ Pedido #: ${pedidoNumero}
+◉ Cliente: ${nombre}
+◉ Ubicación: ${ubicacion}
+◉ Teléfono: ${telefono}
 
-📦 Pedido #: ${pedidoNumero}
-
-👤 Cliente: ${nombre}
-📍 Ubicación: ${ubicacion}
-💳 Pago: ${tipoPago}
-
-🧾 Productos:
+◉ Productos:
 ${productosTexto}
 
-🚚 Envío: $${envio}
-💰 Total: $${total}
-
-📅 Fecha: ${fecha}
-⏰ Hora: ${hora}
-📞 Teléfono: ${telefono}
+◉ Pago: ${tipoPago}
+◉ Total: $${total}
 `;
 
-let numero = "50762980868";
-let url = `https://wa.me/${numero}?text=${encodeURIComponent(mensajeWhatsApp)}`;
+let urlRepartidor = `https://wa.me/${numeroRepartidor}?text=${encodeURIComponent(mensajeRepartidor)}`;
 
 document.getElementById("successScreen").classList.add("show");
 
-// Imprimir ticket
 imprimirTicket(mensajeFactura);
 
-// Abrir WhatsApp
 setTimeout(()=>{
-window.open(url, "_blank");
-},2000);
+window.open(urlRepartidor, "_blank");
+},1500);
+
+
+// 🔥 RESETEAR FORMULARIO AUTOMATICO
+setTimeout(()=>{
+
+document.getElementById("pedidoForm").reset();
+document.getElementById("productos").innerHTML = "";
+agregarProducto();
+calcularTotal();
+
+document.getElementById("successScreen").classList.remove("show");
+
+},4000);
 
 });
 
-// Crear primer producto automático
 document.addEventListener("DOMContentLoaded", agregarProducto);
 
 </script>
 
 </body>
 </html>
+
